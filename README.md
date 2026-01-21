@@ -21,6 +21,11 @@ Answer key supply chain questions such as:
 ## Dataset
 Kaggle: Supply Chain Analysis Dataset (https://www.kaggle.com/datasets/harshsingh2209/supply-chain-analysis)
 
+### Data Quality Simulation
+A dirty dataset version is generated to simulate missing/invalid values:
+see `docs/data/dirty_dataset.md`.
+
+
 ## Project Structure
 - `docs/` → documentation (architecture, KPIs, data quality)
 - `etl/` → Glue scripts / ETL logic
