@@ -33,8 +33,8 @@ see `docs/data/dirty_dataset.md`.
 
 ## Project Structure
 - `docs/` → documentation (architecture, KPIs, data quality)
-- `etl/` → Glue scripts / ETL logic
-- `sql/` → Athena SQL queries (validation + KPIs)
+- `etl/` → ETL scripts
+- `sql/` → SQL queries (validation + KPIs)
 - `bi/` → dashboards + screenshots
 - `assets/` → project screenshots
 
