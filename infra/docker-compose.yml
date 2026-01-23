@@ -1,4 +1,5 @@
 services:
+  # S3-compatible storage
   minio:
     image: minio/minio:latest
     container_name: minio
@@ -11,6 +12,75 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
+    networks:
+      - data-network
+
+  # Postgres - Hive Metastore DB
+  postgres:
+    image: postgres:11-alpine
+    container_name: postgres-metastore
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive
+      POSTGRES_DB: metastore_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - data-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hive"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Hive Metastore (con driver PostgreSQL)
+  hive-metastore:
+    build:
+      context: ./hive
+      dockerfile: Dockerfile
+    container_name: hive-metastore
+    ports:
+      - "9083:9083"
+    environment:
+      SERVICE_NAME: metastore
+      DB_DRIVER: postgres
+      SERVICE_OPTS: "-Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/metastore_db -Djavax.jdo.option.ConnectionUserName=hive -Djavax.jdo.option.ConnectionPassword=hive"
+      # S3 Configuration for MinIO
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      S3_ENDPOINT: http://minio:9000
+      S3_PATH_STYLE_ACCESS: "true"
+    volumes:
+      - ./hive/metastore-site.xml:/opt/hive/conf/metastore-site.xml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    networks:
+      - data-network
+
+  # Trino (SQL Engine) - Con catálogo Hive Metastore
+  trino:
+    image: trinodb/trino:latest
+    container_name: trino
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog:ro
+      - ./trino/config.properties:/etc/trino/config.properties:ro
+    depends_on:
+      - minio
+      - hive-metastore
+    networks:
+      - data-network
+
+networks:
+  data-network:
+    driver: bridge
 
 volumes:
   minio_data:
+  postgres_data:

@@ -39,4 +39,69 @@ see `docs/data/dirty_dataset.md`.
 - `assets/` → project screenshots
 
 ## Status
-Work in progress (Sprint-based development).
+**Sprint 2 Completado** ✅
+
+### Sprints
+- ✅ **Sprint 1:** Setup + Dataset + Repo + MinIO
+- ✅ **Sprint 2:** Catalog RAW + Trino + Data Quality Validation
+- 🔄 **Sprint 3:** ETL CLEAN (Glue Job) + Parquet + Particiones  
+- ⏳ **Sprint 4:** Curated Layer + Modelo Analítico + KPIs finales
+- ⏳ **Sprint 5:** Dashboards + Insights
+- ⏳ **Sprint 6:** Empaquetado GitHub + Demo
+
+## Quick Start
+
+```bash
+# 1. Levantar servicios (MinIO + Hive Metastore + Trino)
+docker-compose -f infra/docker-compose.yml up -d
+
+# 2. Generar dataset dirty (si no existe)
+python etl/scripts/make_dirty_dataset.py
+
+# 3. Configurar Hive Metastore + subir datos a MinIO
+python etl/scripts/setup_hive_metastore.py
+
+# 4. Ejecutar queries de validación
+python sql/trino/run_validation.py
+```
+
+## Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   Docker Stack (4 servicios)                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────┐      ┌────────────────┐     ┌──────────────┐ │
+│  │  MinIO   │ ←──→ │ Hive Metastore │ ←─→ │  PostgreSQL  │ │
+│  │  :9000   │      │     :9083      │     │    :5432     │ │
+│  │ (S3 raw) │      │   (metadata)   │     │ (metastore)  │ │
+│  └────┬─────┘      └───────┬────────┘     └──────────────┘ │
+│       │                    │                               │
+│       └────────────┬───────┘                               │
+│                    ↓                                       │
+│              ┌───────────┐                                 │
+│              │   Trino   │                                 │
+│              │   :8080   │                                 │
+│              │ (queries) │                                 │
+│              └───────────┘                                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Equivalencia AWS
+
+| Componente Local | Servicio AWS |
+|------------------|--------------|
+| MinIO | S3 |
+| Hive Metastore | Glue Data Catalog |
+| Trino | Athena |
+| PostgreSQL | RDS / Glue Backend |
+
+## Servicios Disponibles
+
+| Servicio | URL | Credenciales |
+|----------|-----|--------------|
+| Trino UI | http://localhost:8080 | - |
+| MinIO Console | http://localhost:9001 | minioadmin / minioadmin |
+| Hive Metastore | thrift://localhost:9083 | - |
+| PostgreSQL | localhost:5432 | hive / hive |
