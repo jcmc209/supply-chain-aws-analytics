@@ -11,7 +11,7 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
-    
+
   postgres:
     image: postgres:15
     container_name: hive-metastore-postgres
@@ -19,7 +19,6 @@ services:
       POSTGRES_DB: metastore
       POSTGRES_USER: hive
       POSTGRES_PASSWORD: hive
-      POSTGRES_INITDB_ARGS: "--auth-host=md5 --auth-local=md5"
     ports:
       - "5433:5432"
     volumes:
@@ -31,24 +30,32 @@ services:
       retries: 10
 
   hive-metastore:
-    image: starburstdata/hive-metastore:latest
+    build: ./hive-metastore
     container_name: hive-metastore
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      HIVE_METASTORE_JDBC_URL: jdbc:postgresql://postgres:5432/metastore
-      HIVE_METASTORE_DRIVER: org.postgresql.Driver
-      HIVE_METASTORE_USER: hive
-      HIVE_METASTORE_PASSWORD: hive
-      HIVE_METASTORE_KERBEROS_PRINCIPAL: ""
     ports:
       - "9083:9083"
+    environment:
+      SERVICE_NAME: metastore
+      DB_DRIVER: postgres
 
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
 
+      SERVICE_OPTS: >
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/metastore
+        -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+        -Djavax.jdo.option.ConnectionUserName=hive
+        -Djavax.jdo.option.ConnectionPassword=hive
+
+    volumes:
+      - ./hive-conf/hive-site.xml:/opt/hive/conf/hive-site.xml:ro
+      - ./hive-conf/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
 
   trino:
-    image: trinodb/trino:latest
+    image: trinodb/trino:479
     container_name: trino
     depends_on:
       - hive-metastore
