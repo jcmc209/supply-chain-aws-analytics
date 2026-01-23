@@ -1,6 +1,6 @@
 <configuration>
 
-  <!-- Metastore DB (Postgres) -->
+  <!-- JDBC Metastore (Postgres) -->
   <property>
     <name>javax.jdo.option.ConnectionURL</name>
     <value>jdbc:postgresql://postgres:5432/metastore</value>
@@ -21,19 +21,30 @@
     <value>hive</value>
   </property>
 
-  <!-- Thrift -->
+  <!-- Thrift metastore -->
   <property>
     <name>metastore.thrift.port</name>
     <value>9083</value>
   </property>
 
-  <!-- Warehouse en MinIO -->
+  <property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://hive-metastore:9083</value>
+  </property>
+
+  <!-- Warehouse (en MinIO usando S3A porque es Hadoop/Hive) -->
   <property>
     <name>hive.metastore.warehouse.dir</name>
     <value>s3a://raw/warehouse</value>
   </property>
 
-  <!-- Evita kerberos -->
+  <!-- External warehouse (por si usas external tables desde Hive) -->
+  <property>
+    <name>hive.metastore.warehouse.external.dir</name>
+    <value>s3a://raw/external</value>
+  </property>
+
+  <!-- Desactivar sasl/kerberos -->
   <property>
     <name>hive.metastore.sasl.enabled</name>
     <value>false</value>

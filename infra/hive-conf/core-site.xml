@@ -1,6 +1,5 @@
 <configuration>
-
-  <!-- S3A / MinIO -->
+  <!-- MinIO endpoint -->
   <property>
     <name>fs.s3a.endpoint</name>
     <value>http://minio:9000</value>
@@ -21,13 +20,18 @@
     <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
   </property>
 
-  <!-- credenciales por env -->
+  <!-- Credenciales -->
   <property>
-    <name>fs.s3a.aws.credentials.provider</name>
-    <value>com.amazonaws.auth.EnvironmentVariableCredentialsProvider</value>
+    <name>fs.s3a.access.key</name>
+    <value>${env.MINIO_ROOT_USER}</value>
   </property>
 
-  <!-- Desactivar Kerberos -->
+  <property>
+    <name>fs.s3a.secret.key</name>
+    <value>${env.MINIO_ROOT_PASSWORD}</value>
+  </property>
+
+  <!-- Sin kerberos -->
   <property>
     <name>hadoop.security.authentication</name>
     <value>simple</value>
@@ -37,5 +41,4 @@
     <name>hadoop.security.authorization</name>
     <value>false</value>
   </property>
-
 </configuration>

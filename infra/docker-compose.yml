@@ -16,9 +16,9 @@ services:
     image: postgres:15
     container_name: hive-metastore-postgres
     environment:
-      POSTGRES_DB: metastore
-      POSTGRES_USER: hive
-      POSTGRES_PASSWORD: hive
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
     volumes:
@@ -35,6 +35,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_started
     ports:
       - "9083:9083"
     environment:
@@ -49,7 +51,6 @@ services:
         -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
         -Djavax.jdo.option.ConnectionUserName=hive
         -Djavax.jdo.option.ConnectionPassword=hive
-
     volumes:
       - ./hive-conf/hive-site.xml:/opt/hive/conf/hive-site.xml:ro
       - ./hive-conf/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
@@ -65,7 +66,7 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
-      - ./trino/etc:/etc/trino
+      - ./trino/etc:/etc/trino:ro
 
 volumes:
   minio_data:
